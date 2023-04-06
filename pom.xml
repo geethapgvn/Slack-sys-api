@@ -41,7 +41,7 @@
 					</cloudHubDeployment>
 					<classifier>mule-application</classifier>
 				</configuration>
-				<version>3.8.0</version>
+				<version>3.4.2</version>
 			</plugin>
 			<plugin>
 				<groupId>com.mulesoft.munit.tools</groupId>
