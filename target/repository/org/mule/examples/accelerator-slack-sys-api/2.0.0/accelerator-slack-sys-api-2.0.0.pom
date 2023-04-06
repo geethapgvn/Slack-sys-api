@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.mule.examples</groupId>
+  <artifactId>accelerator-slack-sys-api</artifactId>
+  <version>2.0.0</version>
+  <name>Accelerator Slack System API</name>
+  <properties>
+    <classifier>raml</classifier>
+    <main>accelerator-slack-sys-api.raml</main>
+    <apiVersion>v2</apiVersion>
+    <projectId>e321ab9b-4b80-4cc1-ad64-c48cbeeaebdb</projectId>
+    <branchId>master</branchId>
+    <commitId>5b4cbd967b93258537d2b11cc92ce915238f902b</commitId>
+    <keywords/>
+    <type>rest-api</type>
+    <mainFile>accelerator-slack-sys-api.raml</mainFile>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.mule.examples</groupId>
+      <version>2.2.0</version>
+      <type>zip</type>
+      <classifier>raml-fragment</classifier>
+      <artifactId>accelerator-global-resources</artifactId>
+    </dependency>
+  </dependencies>
+  <repositories>
+    <repository>
+      <id>anypoint-exchange</id>
+      <url>https://maven.anypoint.mulesoft.com/api/v3/maven</url>
+    </repository>
+  </repositories>
+</project>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.mule.examples</groupId>
+  <artifactId>accelerator-global-resources</artifactId>
+  <version>2.2.0</version>
+  <name>Accelerator Global Resources</name>
+  <properties>
+    <classifier>raml-fragment</classifier>
+    <main>accelerator-global-resources.raml</main>
+    <type>raml-fragment</type>
+    <mainFile>accelerator-global-resources.raml</mainFile>
+  </properties>
+  <repositories>
+    <repository>
+      <id>anypoint-exchange</id>
+      <url>https://maven.anypoint.mulesoft.com/api/v3/maven</url>
+    </repository>
+  </repositories>
+</project>

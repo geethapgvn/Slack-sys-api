@@ -1,0 +1,42 @@
+{
+  "configs": [
+    "ping.xml",
+    "global.xml",
+    "slack.xml",
+    "slack-sys-api.xml"
+  ],
+  "secureProperties": [
+    "mule.key",
+    "anypoint.platform.client_secret",
+    "slack-sys-api.slack.access-token"
+  ],
+  "redeploymentEnabled": true,
+  "name": "org.mule.examples:accel-slack-sys-api:2.0.1",
+  "minMuleVersion": "4.4.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "config/config-dev.yaml",
+        "config/config-local.yaml",
+        "config/config-prd.yaml",
+        "config/config-secured-dev.yaml",
+        "config/config-secured-local.yaml",
+        "config/config-secured-prd.yaml",
+        "config/config.yaml",
+        "dwl/success-response.dwl",
+        "global.xml",
+        "log4j2.xml",
+        "ping.xml",
+        "slack-sys-api.xml",
+        "slack.xml"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

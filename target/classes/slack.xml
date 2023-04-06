@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:slack="http://www.mulesoft.org/schema/mule/slack"
+    xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq"
+    xmlns:nexmo-smsapi="http://www.mulesoft.org/schema/mule/nexmo-smsapi"
+    xmlns:twilio-connector="http://www.mulesoft.org/schema/mule/twilio-connector"
+    xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:nexmo-messages-api="http://www.mulesoft.org/schema/mule/nexmo-messages-api"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/nexmo-messages-api http://www.mulesoft.org/schema/mule/nexmo-messages-api/current/mule-nexmo-messages-api.xsd http://www.mulesoft.org/schema/mule/nexmo-messages-api http://www.mulesoft.org/schema/mule/nexmo-messages-api/current/mule-nexmo-messages-api.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/twilio-connector http://www.mulesoft.org/schema/mule/twilio-connector/current/mule-twilio-connector.xsd
+http://www.mulesoft.org/schema/mule/nexmo-smsapi http://www.mulesoft.org/schema/mule/nexmo-smsapi/current/mule-nexmo-smsapi.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd
+http://www.mulesoft.org/schema/mule/slack http://www.mulesoft.org/schema/mule/slack/current/mule-slack.xsd">
+
+    <sub-flow name="slack_post-message"
+        doc:id="c1b438b9-7f39-4e28-924d-c5594a602b3e">
+        <logger level="DEBUG" doc:name="Slack payload"
+            doc:id="f22b2b2b-9c45-41e9-a894-38e9417cd259"
+            message="#[output application/json ---
+{
+ 	slack_payload: payload
+}]" />
+        <try doc:name="Try" doc:id="579b17dd-02d5-4a18-807d-fa1cbd120ff4" >
+			<http:request method="POST" doc:name="Slack - Post Message" doc:id="fbfeb57b-80e9-466d-8d5d-7368374950a9" config-ref="slack-sys-api-httpRequestConfig" path="/chat.postMessage" outputMimeType="application/json">
+      			<http:body><![CDATA[#[output application/json
+---
+{
+	"token": ('slack-sys-api.slack.access-token'),
+	"channel" : payload.channel,
+	"text" : payload.text
+}]]]></http:body>
+      			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Bearer " ++ p('slack-sys-api.slack.access-token'),
+	"Content-Type" : "application/json; charset=utf-8"
+}]]]></http:headers>
+        	</http:request>
+			<error-handler>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="0058ff62-69d9-45d6-b6f3-935a62e491a1"
+					type="HTTP:BAD_REQUEST, HTTP:CLIENT_SECURITY, HTTP:CONNECTIVITY, HTTP:FORBIDDEN, HTTP:METHOD_NOT_ALLOWED, HTTP:NOT_ACCEPTABLE, HTTP:NOT_FOUND, HTTP:PARSING, HTTP:RETRY_EXHAUSTED, HTTP:SECURITY, HTTP:UNAUTHORIZED, HTTP:UNSUPPORTED_MEDIA_TYPE">
+					<flow-ref doc:name="common-error-handler_http-exception" doc:id="e0256dad-14d7-45ca-9b96-56c518be2208" name="common-error-handler_http-exception" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+
+		<choice doc:name="Check for http response" doc:id="0dc12bca-9b4c-403e-9d9b-98da90686886" >
+			<when expression="#[vars.httpStatus != null]">
+				<ee:transform doc:name="Error Message" doc:id="eea6aad1-1de0-4fce-a173-33668c800506" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.exceptionResponse]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression="#[payload.ok == false]">
+				<set-variable value="400" doc:name="Set httpStatus" doc:id="b559ae1f-5c22-4017-b438-53591c6292a3" variableName="httpStatus"/>
+				<ee:transform doc:name="Error Message" doc:id="c06f7361-4e6c-4e9a-b799-fc6d3b28fb94" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"errorCode": vars.httpStatus,
+  	"errorMessage": payload.error,
+  	"transactionId": correlationId,
+  	"timeStamp": now()
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="No Error logging" doc:id="49f66e83-4861-416f-a80e-a5b928f142fd" message="No Error occurred" />
+				<logger level="DEBUG" doc:name="Slack response" doc:id="2e1f94d2-3882-459b-8d6f-4f371c7f275f" message="#[output application/json ---
+{
+ 	slack_resp: payload
+}]" />
+				<ee:transform doc:name="success" doc:id="40732cfd-2165-4188-9e46-e1b994554b8e">
+            		<ee:message>
+                		<ee:set-payload resource="dwl/success-response.dwl" />
+            		</ee:message>
+        		</ee:transform>
+			</otherwise>
+		</choice>
+    </sub-flow>
+</mule>

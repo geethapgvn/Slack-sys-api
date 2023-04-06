@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="slack-sys-api-test-suite.xml" />
+	<munit:test name="slack-sys-api-test-suite-post:\messages:application\json:slack-sys-api-configTest" description="Test" doc:id="bf3f9cc1-926b-4edb-a12f-2218cb32021a" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Slack connector" doc:id="274a4203-63f4-4ab5-9f34-48065afdb054" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="POST" attributeName="method" />
+					<munit-tools:with-attribute whereValue="Slack - Post Message" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[
+%dw 2.0
+output application/json
+---
+{
+  responseStatus: "SUCCESS"
+}
+]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="set Slack payload" doc:id="57310fad-18d8-4580-8327-db70dff67be4" >
+				<munit:payload value='{
+  "channel": "testchannel",
+  "text": "test message to slack channel #testchannel"
+}' encoding="UTF-8" mediaType="application/json" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to post:\messages:application\json:slack-sys-api-config" doc:id="7a670403-c277-40de-a4c7-18fb4792b0ef" name="post:\messages:application\json:slack-sys-api-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="eaec7b29-bcea-4829-be48-a235b7882789" expression="#[payload.responseStatus]" is="#[MunitTools::notNullValue()]" message="#['SUCCESS']"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="slack-sys-api-test-suite-post:\slack:application\json:slack-sys-api-config-usererror-Test" description="Test" doc:id="21700baf-88d4-4236-bec7-c4357fae4c7b" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Slack connector" doc:id="0b1a225a-9a91-4731-9841-b0eacf561e4b" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="POST" attributeName="method" />
+					<munit-tools:with-attribute whereValue="Slack - Post Message" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[
+%dw 2.0
+output application/json
+---
+{
+    "ok": false,
+    "error": "channel_not_found"
+}
+]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="set Slack payload" doc:id="bd50be23-6b99-4639-84ce-a77f46efb8e2" >
+				<munit:payload value='{
+  "channel": "testchannel",
+  "text": "test message to slack channel #testchannel"
+}' encoding="UTF-8" mediaType="application/json" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to post:\messages:application\json:slack-sys-api-config" doc:id="23123939-6c04-4d1e-8249-2527c00058a8" name="post:\messages:application\json:slack-sys-api-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert error message" doc:id="08bf8dda-f290-4ecd-b159-9de70a3a59da" actual="#[payload.errorMessage]" expected="#['channel_not_found']" message="#['Expected failure message from Slack API']"/>
+			<munit-tools:assert-equals doc:name="Assert response code" doc:id="3665249a-e8f6-474f-9483-98d8cf32a4f2" actual="#[vars.httpStatus]" expected="#['400']" message="#['Expected 400 response code']"/>
+		</munit:validation>
+	</munit:test>
+</mule>

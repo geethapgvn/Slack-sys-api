@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd">
+    <flow name="slack-sys-api-main">
+        <http:listener path="${slack-sys-api.http-listener.path}" config-ref="slack-sys-api-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]" />
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="slack-sys-api-config" />
+		<error-handler ref="error-handler_common" />
+    </flow>
+    <flow name="slack-sys-api_console">
+        <http:listener path="/console/*" config-ref="slack-sys-api-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="slack-sys-api-config" />
+		<error-handler ref="error-handler_common" />
+    </flow>
+    <flow name="get:\ping:slack-sys-api-config">
+		<flow-ref doc:name="ping_get-health" doc:id="72095aea-b696-4b9b-afcf-1d97e73f0ac6" name="ping_get-health"/>
+    </flow>
+    <flow name="post:\messages:application\json:slack-sys-api-config">
+        <flow-ref doc:name="slack_post-message" doc:id="a35d7d8f-c90b-4d18-9843-872a02530fe2" name="slack_post-message" />
+    </flow>
+</mule>

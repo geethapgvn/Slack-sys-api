@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="03eba596-0397-4c45-b442-d39766aabb6e" >
+		<http:request-connection protocol="HTTPS" host="${slack-sys-api.slack.ping-url}" />
+	</http:request-config>
+	<sub-flow name="ping_get-health" doc:id="90776223-0095-4a48-86bc-40abefd80ad1" >
+		<set-variable value='#[attributes.queryParams.checkDependencies == "true" default false]' doc:name="checkDependencies" doc:id="a5c8294d-2963-431a-bb47-ceaf866014bf" variableName="checkDependencies"/>
+		<choice doc:name="Choice" doc:id="db5c7531-5dba-46ab-8785-a5c363c4b60f" >
+			<when expression="#[vars.checkDependencies]">
+				<flow-ref doc:name="Check Dependencies" doc:id="ae119686-148f-4371-9250-afb65ca1f16f" name="ping_check-dependencies"/>
+			</when>
+			<otherwise>
+				<set-variable doc:name="dependencyList" doc:id="2a984e48-26ff-4da8-ab5a-17e2426162d4" variableName="dependencyList" value="#[null]"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Map Response" doc:id="0164623c-74d2-4155-a62a-2cdb1af29451">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+fun getDependencyStatus(dependencyResponse) = if(sizeOf(dependencyResponse.status find "UP") == sizeOf(dependencyResponse))
+    "OK"
+else if (sizeOf(dependencyResponse.status find "DOWN") == sizeOf(dependencyResponse))
+    "OFFLINE"
+else
+    "DEGRADED"
+    
+output application/json
+---
+{
+	status: if(vars.checkDependencies == true) getDependencyStatus(vars.dependencyList) else "OK",
+	apiName: p("api.name") default "",
+	apiVersion: p("api.version") default "",
+	(dependencies: vars.dependencyList map(item) -> {
+		name: item.name default "",
+		status: item.status default ""
+	})
+	if(vars.dependencyList != null)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="200" doc:name="httpStatus" doc:id="8a16e3eb-6293-463a-ab17-d52b3f48ec37" variableName="httpStatus"/>
+	</sub-flow>
+	<sub-flow name="ping_check-dependencies" doc:id="cbb2055f-41c2-4259-92fb-10895c8e6196" >
+		<try doc:name="Try" doc:id="0f276e43-39f8-4f00-acd3-557850bca94b" >
+			<http:request method="GET" doc:name="Check Slack" doc:id="7527ef2e-e886-42c4-9196-f07459a2a72d" config-ref="HTTP_Request_configuration" path="/api/v2.0.0/current" followRedirects="true" sendBodyMode="AUTO" outputMimeType="application/java">
+			</http:request>
+			<set-variable doc:name="dependencyList" doc:id="bad9e34c-d9ef-4066-a3d1-43fbd220ab62" variableName="dependencyList" value='#[%dw 2.0&#10;output application/java&#10;---&#10;[{&#10;	name: "slack",&#10;	status: "UP"&#10;}]]'/>
+			<error-handler >
+			    <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="0f645ae1-6849-4d62-97a4-c2d7fa399e62" type="HTTP:GATEWAY_TIMEOUT, HTTP:TIMEOUT">
+					  <set-variable doc:name="dependencyList" doc:id="29fe36fb-9353-4bef-9ec4-d148e2bc1ad2" variableName="dependencyList" value='#[%dw 2.0&#10;output application/java&#10;---&#10;[{&#10;	name: "slack",&#10;	status: "DOWN"&#10;}]]' mimeType="application/json"/>			    
+			   </on-error-continue>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c991b978-ad1c-4cad-844a-a8c8d3fc68fe">
+					  <set-variable doc:name="dependencyList" doc:id="23751e5e-d3ad-459e-b653-9dd8f8f3babf" variableName="dependencyList" value='#[%dw 2.0&#10;output application/java&#10;---&#10;[{&#10;	name: "slack",&#10;	status: "ERROR"&#10;}]]' mimeType="application/json"/>				    
+				</on-error-continue>
+			</error-handler>
+		</try>				
+	</sub-flow>
+</mule>
