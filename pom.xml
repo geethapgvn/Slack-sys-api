@@ -28,35 +28,25 @@
 				<groupId>org.mule.tools.maven</groupId>
 				<artifactId>mule-maven-plugin</artifactId>
 				<extensions>true</extensions>
-				<version>3.4.2</version>
-				<configuration>
-					<cloudHubDeployment>
-						<uri>https://anypoint.mulesoft.com</uri>
-						<muleVersion>${mule.version}</muleVersion> 
-						<username>${anypoint.username}</username> 
-						<password>${anypoint.password}</password> 
-						<applicationName>${appname}</applicationName> 
-						<environment>${environment}</environment> 
-						<workerType>${vCore}</workerType>
-						<workers>${workers}</workers> 
-						<objectStoreV2>true</objectStoreV2> 
-					</cloudHubDeployment>
-					<classifier>mule-application</classifier>
-				</configuration>
 			</plugin>
 			<plugin>
-                <groupId>com.mulesoft.munit.tools</groupId>
-				<artifactId>munit-maven-plugin</artifactId>
-				<version>${munit.version}</version>
-				<executions>
-					<execution>
-						<id>test</id>
-						<phase>test</phase>
-						<goals>
-							<goal>test</goal>
-						</goals>
-					</execution>
-				</executions>
+				<groupId>org.mule.tools.maven</groupId>
+				<artifactId>mule-maven-plugin</artifactId>
+				<version>3.4.2</version>
+				<extensions>true</extensions>
+				<configuration>
+					<cloudHubDeployment>
+					<uri>https://anypoint.mulesoft.com</uri>
+					<muleVersion>${mule.version}</muleVersion>
+					<username>${anypoint.username}</username>
+					<password>${anypoint.password}</password>
+					<applicationName>${appname}</applicationName>
+					<environment>${environment}</environment>
+					<workers>${workers}</workers>
+					<workerType>${vCore}</workerType>
+					<objectStoreV2>true</objectStoreV2>
+					</cloudHubDeployment>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.mule.examples</groupId>
